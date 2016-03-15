@@ -28,6 +28,7 @@ parser.add_argument("-t", "--terms", help="Comma delinated list of terms to sear
 # parser.add_argument("-w", "--write", help="Output lines for each speaker into their own files", action="store_true")
 parser.add_argument("-o", "--output", help="Write CSV output results data to file", action="store_true")
 parser.add_argument("-s", "--silent", help="Prints output to std out", action="store_true")
+parser.add_argument("-r", "--restrict", help="Restrict speaker names to those in comm separated list")
 parser.add_argument("-c", "--case", help="Preserve case sensitivity in search for terms", action="store_true", default=False)
 
 # Handle inputs
@@ -53,6 +54,11 @@ speaker_pattern = re.compile("^(?P<name>[A-Z][A-Za-z'\-]+):\s")
 # Keep a list of all speakers encountered. This will come in handy later
 speaker_list = []
 
+only_speakers = None
+if args.restrict:
+	only_speakers = args.restrict.split(",")
+	only_speakers = [x.upper() for x in only_speakers]
+
 # Now read through the files
 for findex,fname in enumerate(args.file):
 	# Populate files for each term
@@ -69,8 +75,13 @@ for findex,fname in enumerate(args.file):
 				current_speaker = has_speaker.group("name").upper()
 				# See if we already have the speaker in our list of speakers
 				if not (current_speaker in speaker_list):
-					speaker_list.append(current_speaker)
-					speaker_list = list(set(speaker_list))
+					# Add speakers to list only if listed as a speaker name we want
+					if args.restrict and ( current_speaker in only_speakers):
+						speaker_list.append(current_speaker)
+						speaker_list = list(set(speaker_list))
+					elif not args.restrict:
+						speaker_list.append(current_speaker)
+						speaker_list = list(set(speaker_list))
 			# Don't bother searching paragraphs that don't belong to anyone
 			if current_speaker:
 				for term in terms:

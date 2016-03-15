@@ -61,6 +61,11 @@ Prints output to std out
 Preserve case sensitivity in search for terms
 
 
+*-r, --restrict RESTRICT*
+
+Restrict speaker searching to names specified in the command line. Use this to look for a single speaker, without having to get a big CSV with names of interviewers/moderators.
+
+
 At the very least, *-f* and *-t* must be used.
 
 ## License
