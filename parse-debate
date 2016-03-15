@@ -48,7 +48,7 @@ for term in terms:
 	data[term] = []
 
 # Pattern that finds speakers (taken out of a loop to save time)
-speaker_pattern = re.compile("^(?P<name>[A-Z]([A-Z]|[a-z])+):\s")
+speaker_pattern = re.compile("^(?P<name>[A-Z][A-Za-z'\-]+):\s")
 
 # Keep a list of all speakers encountered. This will come in handy later
 speaker_list = []
