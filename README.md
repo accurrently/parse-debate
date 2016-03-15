@@ -4,6 +4,10 @@ Right now, the program is tuned to handle plaintext that uses a format similar t
 
 *SPEAKER: text*
 
+*more text*
+
+*NEXT SPEAKER: text*
+
 For now, the regex used for speaker detection is */^\[A-Z\](\[A-Z\]|\[a-z\])+:\s/*. Future versions may change this, or make it editable from the command line.
 
 At this time, the keyword search simply uses Python's count() function. As a result, it will find terms that are parts of larger words. The term "tech" will match the word "technology," for instance. If you want to use whole word searches only, be sure to include spaces between the commas in your terms list (see below).
