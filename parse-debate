@@ -70,6 +70,7 @@ for findex,fname in enumerate(args.file):
 				# See if we already have the speaker in our list of speakers
 				if not (current_speaker in speaker_list):
 					speaker_list.append(current_speaker)
+					speaker_list = list(set(speaker_list))
 			# Don't bother searching paragraphs that don't belong to anyone
 			if current_speaker:
 				for term in terms:
@@ -90,16 +91,19 @@ for findex,fname in enumerate(args.file):
 # Let's write out the data
 for term in terms:
 	# Create the CSV header
-	out = "speaker"
+	out = "Speaker"
 	for fname in args.file:
 		out += "," + fname
 	out += "\n"
-
+	
 	# Create one row for each speaker, one column for each file
 	for speaker in speaker_list:
 		out += speaker
 		for findex,fname in enumerate(args.file):
-			out += "," + str(data[term][findex][speaker])
+			if speaker in data[term][findex]:
+				out += "," + str(data[term][findex][speaker])
+			else:
+				out += ",0"
 		out += "\n"
 	
 	# Write to screen
@@ -116,22 +120,6 @@ for term in terms:
 			exit()
 		finally:
 			f.close()
-	
 
 exit()
 		
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
