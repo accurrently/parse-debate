@@ -27,111 +27,96 @@ parser.add_argument("-v", "--verbose", help="Verbose output", action="count", de
 parser.add_argument("-t", "--terms", help="Comma delinated list of terms to search for", required=True)
 # parser.add_argument("-w", "--write", help="Output lines for each speaker into their own files", action="store_true")
 parser.add_argument("-o", "--output", help="Write CSV output results data to file", action="store_true")
-parser.add_argument("-c", "--case", help="Preserve case sensitivity in search for terms", action="store_true")
+parser.add_argument("-s", "--silent", help="Prints output to std out", action="store_true")
+parser.add_argument("-c", "--case", help="Preserve case sensitivity in search for terms", action="store_true", default=False)
 
 # Handle inputs
 args = parser.parse_args()
 
-# This will tell us who said what
+# init our data structure:
+# data
+# - term
+#   - file
+#     - name:occurances
+#
 data = {}
-results = {}
 
-# Terms we'll be searching for
-terms = args.terms.split(',')
 
-# This holds all of the lines for each file
-lines = {}
-
-file_list = args.file
-for file_index in range(len(file_list)):
-
-	filecontents = ""
-
-	try:
-		if args.verbose >= 2:
-			print("Opening %s ...\n" % file_list[file_index])
-		infile = open(file_list[file_index], "r")
-		try:
-			filecontents = infile.read()
-			
-		finally:
-			infile.close()
-	except IOError:
-		print("Could not read file: %s. Exiting.\n" % args.file)
-		exit()
-
-	# create a line for each paragraph
-	lines[file_index] = filecontents.splitlines()
-
-	# first off, determine what lines belong to what speaker
-
-	speaker_pattern = re.compile("^(?P<name>[A-Z]([A-Z]|[a-z])+):\s")
-	
-	current_speaker = None
-
-	for lines_index in range(len(lines)):
-		hit = speaker_pattern.search(lines[lines_index])
-		if hit:
-			if args.verbose >= 3:
-				print("Found speaker: %s.\n" % hit.group("name"))
-			if not (hit.group("name") in data):
-				data[hit.group("name")] = []
-			if not (file_index in data[hit.group("name")]):
-				data[hit.group("name")][file_index] = []
-			if args.verbose >= 3:
-				print("Adding line for speaker: %s.\n" % hit.group("name"))
-			data[hit.group("name")][file_index].append(lines_index)
-			current_speaker = hit.group("name")
-		elif current_speaker:
-			data[current_speaker][file_index].append(lines_index)
-			
-
-	
-
-# Create a data table for each term
+# Make a table for each of our terms
+terms = args.terms.split(",")
 for term in terms:
-	results[term] = {}
+	data[term] = []
 
-	# Create a row for each speaker
-	for speaker in range(data):
-		results[term][speaker] = []
-		for file_index in range(len(file_list)):
-			score = 0
-			for line_numbers in data[speaker][file_index]:
-				for line_number in line_numbers:
-					thestring = lines[file_index][line_number]
-					if not args.case:
-						thestring = thestring.tolower()
-					score += thestring.count(term)
-			if args.verbose >= 2:
-				print("Score: %s\n" % score)
-			results[term][speaker][file_index] = score
-	
-	out = ""
+# Pattern that finds speakers (taken out of a loop to save time)
+speaker_pattern = re.compile("^(?P<name>[A-Z]([A-Z]|[a-z])+):\s")
+
+# Keep a list of all speakers encountered. This will come in handy later
+speaker_list = []
+
+# Now read through the files
+for findex,fname in enumerate(args.file):
+	# Populate files for each term
+	for term in terms:
+		data[term].append({})
+		i = len(data[term]) - 1
+	try:
+		f = open(fname, "r")
+		current_speaker = None
+		for line in f:	
+			# Find out if we have a new speaker
+			has_speaker = speaker_pattern.search(line)
+			if has_speaker:
+				current_speaker = has_speaker.group("name").upper()
+				# See if we already have the speaker in our list of speakers
+				if not (current_speaker in speaker_list):
+					speaker_list.append(current_speaker)
+			# Don't bother searching paragraphs that don't belong to anyone
+			if current_speaker:
+				for term in terms:
+					# Check for case-sensitive searches
+					if args.case:
+						data[term][i][current_speaker] = data[term][i].get(current_speaker, 0) + line.count(term)
+					# Case insensitive searches
+					else:
+						
+						data[term][i][current_speaker] = data[term][i].get(current_speaker, 0) + line.lower().count(term.lower())
+						#print data		
+	except IOError:
+		print "Error: Could not read \"" + fname + "\"\n"
+		exit()
+	finally:
+		f.close()
+
+# Let's write out the data
+for term in terms:
+	# Create the CSV header
 	out = "speaker"
-	for file_name in file_list:
-		out += "," + file_name
-	out = "\n"
-	
-	for speaker in range(data):
+	for fname in args.file:
+		out += "," + fname
+	out += "\n"
+
+	# Create one row for each speaker, one column for each file
+	for speaker in speaker_list:
 		out += speaker
-		for file_index in range(results[term][speaker]):
-			out += "," + str(results[term][speaker][file_index])
+		for findex,fname in enumerate(args.file):
+			out += "," + str(data[term][findex][speaker])
 		out += "\n"
 	
-	if args.verbose >= 1:
-		print out
-	
-	
+	# Write to screen
+	if not args.silent:
+		print "Term: " + term + "\n" + out
+
+	# Write to file
 	if args.output:
-		fname = "results-" + term + ".csv"
 		try:
-			outfile = open(fname, "w")
-			outfile.write(out)
+			f = open(term + "-results.csv", "w")
+			f.write(out)
+		except IOError:
+			print "Error: could not write \"" + term + "-results.csv\"\n"
+			exit()
 		finally:
-			outfile.close()
-		#except IOError:
-			#print "Could not open file for writing, sorry.\n"
+			f.close()
+	
 
 exit()
 		
