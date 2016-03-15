@@ -1,6 +1,6 @@
 # parse-debate
 parse-debate is a Python program to parse debate transcripts and count the times strings appear within the transcript, and who said them.
-Right now, the program is tuned to handle plaintext that uses a format similar to UC Berkeley's [American Presidency Project](http://www.presidency.ucsb.edu/debates.php):
+Right now, the program is tuned to handle plaintext that uses a format similar to UC Santa Barbara's [American Presidency Project](http://www.presidency.ucsb.edu/debates.php):
 
 *SPEAKER: text*
 
