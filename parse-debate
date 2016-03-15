@@ -91,15 +91,15 @@ for findex,fname in enumerate(args.file):
 # Let's write out the data
 for term in terms:
 	# Create the CSV header
-	out = "Speaker"
-	for fname in args.file:
-		out += "," + fname
+	out = "File"
+	for speaker in speaker_list:
+		out += "," + speaker
 	out += "\n"
 	
-	# Create one row for each speaker, one column for each file
-	for speaker in speaker_list:
-		out += speaker
-		for findex,fname in enumerate(args.file):
+	# Create one column for each speaker, one row for each file
+	for findex,fname in enumerate(args.file):
+		out += fname
+		for speaker in speaker_list:
 			if speaker in data[term][findex]:
 				out += "," + str(data[term][findex][speaker])
 			else:
